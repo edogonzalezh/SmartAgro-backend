@@ -120,9 +120,33 @@ export class CalendarioService {
 
   /** Lista todos los lotes con sus etapas, para alimentar las pantallas de "hoy" y calendario. */
   async listarLotes() {
-    return this.prisma.lote.findMany({
-      include: { etapas: true },
+    const lotes = await this.prisma.lote.findMany({
+      include: {
+        etapas: true,
+        ficha: { include: { tareas: true } },
+      },
       orderBy: { createdAt: 'desc' },
+    });
+
+    // Calcular tareas por lote a partir de TareaFicha + fechas reales de EtapaLote
+    return lotes.map((lote) => {
+      const etapaMap = new Map(lote.etapas.map((e) => [e.etapaCodigo, e]));
+      const tareas = lote.ficha.tareas.map((t) => {
+        const ancla = etapaMap.get(t.etapaAncla);
+        const fechaAncla = ancla
+          ? (ancla.fechaReal ?? ancla.fechaPlanificada)
+          : new Date();
+        const fecha = new Date(fechaAncla);
+        fecha.setDate(fecha.getDate() + t.offsetDias);
+        return {
+          id: t.id,
+          nombre: t.nombre,
+          etapaAncla: t.etapaAncla,
+          offsetDias: t.offsetDias,
+          fechaPlanificada: fecha,
+        };
+      });
+      return { ...lote, tareas };
     });
   }
 
