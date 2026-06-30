@@ -1,0 +1,102 @@
+// schema.prisma — SmartAgro MVP
+// Seis modelos núcleo, diseñados para soportar el motor de recálculo por eventos.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nombre    String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  predios Predio[]
+}
+
+model Predio {
+  id        String   @id @default(uuid())
+  nombre    String
+  ubicacion String   // texto libre por ahora: "Talca, VII Región"
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  createdAt DateTime @default(now())
+
+  lotes Lote[]
+}
+
+model Lote {
+  id          String   @id @default(uuid())
+  nombre      String
+  predioId    String
+  predio      Predio   @relation(fields: [predioId], references: [id])
+  fichaId     String
+  ficha       FichaCultivo @relation(fields: [fichaId], references: [id])
+  fechaInicio DateTime // fecha de siembra de almácigo, el "ancla" inicial
+  createdAt   DateTime @default(now())
+
+  etapas          EtapaLote[]
+  eventosClimaticos EventoClimatico[]
+}
+
+// Ficha técnica de referencia (tomate_talca, lechuga_talca, etc.)
+// Las etapas y tareas de la ficha son la plantilla; EtapaLote es la instancia real.
+model FichaCultivo {
+  id     String @id // ej: "tomate_talca"
+  nombre String // ej: "Tomate - Talca"
+  cultivo String // ej: "tomate"
+  zona    String // ej: "Talca"
+
+  etapas EtapaFicha[]
+  tareas TareaFicha[]
+  lotes  Lote[]
+}
+
+model EtapaFicha {
+  id                     String @id @default(uuid())
+  fichaId                String
+  ficha                  FichaCultivo @relation(fields: [fichaId], references: [id])
+  etapaCodigo            String // ej: "trasplante"
+  nombre                 String
+  orden                  Int
+  duracionDesdeAnterior  Int // días
+}
+
+model TareaFicha {
+  id          String @id @default(uuid())
+  fichaId     String
+  ficha       FichaCultivo @relation(fields: [fichaId], references: [id])
+  nombre      String
+  etapaAncla  String // etapaCodigo de EtapaFicha
+  offsetDias  Int
+}
+
+// Instancia real de una etapa para un lote específico.
+// fechaReal queda null hasta que el agricultor confirma.
+model EtapaLote {
+  id               String    @id @default(uuid())
+  loteId           String
+  lote             Lote      @relation(fields: [loteId], references: [id])
+  etapaCodigo      String
+  nombre           String
+  fechaPlanificada DateTime
+  fechaReal        DateTime?
+  confirmadaEn     DateTime?
+}
+
+model EventoClimatico {
+  id          String   @id @default(uuid())
+  loteId      String
+  lote        Lote     @relation(fields: [loteId], references: [id])
+  tipo        String   // "helada" | "ola_calor"
+  fecha       DateTime
+  ajusteSugeridoDias Int?
+  ajusteAplicado     Boolean @default(false)
+  createdAt   DateTime @default(now())
+}
