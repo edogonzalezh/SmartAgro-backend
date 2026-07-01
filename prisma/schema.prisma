@@ -89,6 +89,7 @@ model EtapaLote {
   nombre           String
   fechaPlanificada DateTime
   fechaReal        DateTime?
+  fechaRealFin     DateTime?
   confirmadaEn     DateTime?
   notas            String?
 }

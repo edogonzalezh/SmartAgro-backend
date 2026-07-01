@@ -204,14 +204,15 @@ export class CalendarioService {
   }
 
   /** Confirmar etapa con notas opcionales */
-  async confirmarEtapaConNotas(loteId: string, etapaCodigo: string, fechaReal: Date, notas?: string) {
+  async confirmarEtapaConNotas(loteId: string, etapaCodigo: string, fechaReal: Date, fechaRealFin?: Date, notas?: string) {
     const resultado = await this.confirmarEtapa(loteId, etapaCodigo, fechaReal);
-    if (notas) {
-      await this.prisma.etapaLote.updateMany({
-        where: { loteId, etapaCodigo },
-        data: { notas },
-      });
-    }
+    await this.prisma.etapaLote.updateMany({
+      where: { loteId, etapaCodigo },
+      data: { 
+        ...(fechaRealFin ? { fechaRealFin } : {}),
+        ...(notas ? { notas } : {}),
+      },
+    });
     return resultado;
   }
 

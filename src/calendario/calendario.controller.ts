@@ -5,7 +5,7 @@ import { CalendarioService } from './calendario.service';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 
 class CrearLoteDto   { nombre: string; predioId: string; fichaId: string; fechaInicio: string; }
-class ConfirmarDto   { etapaCodigo: string; fechaReal: string; notas?: string; }
+class ConfirmarDto   { etapaCodigo: string; fechaReal: string; fechaRealFin?: string; notas?: string; }
 class EventoClimaDto { tipo: 'helada' | 'ola_calor'; fecha: string; }
 class ActualizarLoteDto { nombre?: string; notas?: string; }
 
@@ -54,7 +54,9 @@ export class CalendarioController {
   @Post(':loteId/confirmar-etapa')
   confirmarEtapa(@Param('loteId') loteId: string, @Body() dto: ConfirmarDto) {
     return this.calendarioService.confirmarEtapaConNotas(
-      loteId, dto.etapaCodigo, new Date(dto.fechaReal), dto.notas,
+      loteId, dto.etapaCodigo, new Date(dto.fechaReal),
+      dto.fechaRealFin ? new Date(dto.fechaRealFin) : undefined,
+      dto.notas,
     );
   }
 
