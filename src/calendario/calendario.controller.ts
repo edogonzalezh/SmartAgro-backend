@@ -1,12 +1,13 @@
 // calendario/calendario.controller.ts
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CalendarioService } from './calendario.service';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 
-class CrearLoteDto    { nombre: string; predioId: string; fichaId: string; fechaInicio: string; }
-class ConfirmarDto    { etapaCodigo: string; fechaReal: string; }
-class EventoClimaDto  { tipo: 'helada' | 'ola_calor'; fecha: string; }
+class CrearLoteDto   { nombre: string; predioId: string; fichaId: string; fechaInicio: string; }
+class ConfirmarDto   { etapaCodigo: string; fechaReal: string; notas?: string; }
+class EventoClimaDto { tipo: 'helada' | 'ola_calor'; fecha: string; }
+class ActualizarLoteDto { nombre?: string; notas?: string; }
 
 @Controller('lotes')
 @UseGuards(AuthGuard('jwt'))
@@ -18,22 +19,43 @@ export class CalendarioController {
     return this.calendarioService.listarLotes(user.id);
   }
 
+  @Get('predios')
+  listarPredios(@UsuarioActual() user: { id: string }) {
+    return this.calendarioService.listarPredios(user.id);
+  }
+
+  @Get(':loteId')
+  obtenerLote(@Param('loteId') loteId: string, @UsuarioActual() user: { id: string }) {
+    return this.calendarioService.obtenerLote(loteId, user.id);
+  }
+
   @Post()
   crearLote(@Body() dto: CrearLoteDto) {
     return this.calendarioService.crearLoteConCalendario({
-      nombre: dto.nombre,
-      predioId: dto.predioId,
-      fichaId: dto.fichaId,
-      fechaInicio: new Date(dto.fechaInicio),
+      nombre: dto.nombre, predioId: dto.predioId,
+      fichaId: dto.fichaId, fechaInicio: new Date(dto.fechaInicio),
     });
   }
 
-  @Post(':loteId/confirmar-etapa')
-  confirmarEtapa(
+  @Patch(':loteId')
+  actualizarLote(
     @Param('loteId') loteId: string,
-    @Body() dto: ConfirmarDto,
+    @UsuarioActual() user: { id: string },
+    @Body() dto: ActualizarLoteDto,
   ) {
-    return this.calendarioService.confirmarEtapa(loteId, dto.etapaCodigo, new Date(dto.fechaReal));
+    return this.calendarioService.actualizarLote(loteId, user.id, dto);
+  }
+
+  @Delete(':loteId')
+  eliminarLote(@Param('loteId') loteId: string, @UsuarioActual() user: { id: string }) {
+    return this.calendarioService.eliminarLote(loteId, user.id);
+  }
+
+  @Post(':loteId/confirmar-etapa')
+  confirmarEtapa(@Param('loteId') loteId: string, @Body() dto: ConfirmarDto) {
+    return this.calendarioService.confirmarEtapaConNotas(
+      loteId, dto.etapaCodigo, new Date(dto.fechaReal), dto.notas,
+    );
   }
 
   @Post(':loteId/eventos-climaticos')

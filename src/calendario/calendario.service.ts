@@ -159,4 +159,73 @@ export class CalendarioService {
     });
     return evento;
   }
+
+  /** Obtener un lote por ID con todas sus etapas y tareas calculadas */
+  async obtenerLote(loteId: string, usuarioId: string) {
+    const lote = await this.prisma.lote.findFirst({
+      where: { id: loteId, predio: { usuarioId } },
+      include: {
+        etapas: true,
+        ficha: { include: { tareas: true } },
+        predio: true,
+      },
+    });
+    if (!lote) throw new Error('Lote no encontrado');
+
+    const etapaMap = new Map(lote.etapas.map((e) => [e.etapaCodigo, e]));
+    const tareas = lote.ficha.tareas.map((t) => {
+      const ancla = etapaMap.get(t.etapaAncla);
+      const fechaAncla = ancla ? (ancla.fechaReal ?? ancla.fechaPlanificada) : new Date();
+      const fecha = new Date(fechaAncla);
+      fecha.setDate(fecha.getDate() + t.offsetDias);
+      return { id: t.id, nombre: t.nombre, etapaAncla: t.etapaAncla, offsetDias: t.offsetDias, fechaPlanificada: fecha };
+    });
+    return { ...lote, tareas };
+  }
+
+  /** Actualizar nombre y notas de un lote */
+  async actualizarLote(loteId: string, usuarioId: string, data: { nombre?: string; notas?: string }) {
+    const lote = await this.prisma.lote.findFirst({
+      where: { id: loteId, predio: { usuarioId } },
+    });
+    if (!lote) throw new Error('Lote no encontrado');
+    return this.prisma.lote.update({ where: { id: loteId }, data });
+  }
+
+  /** Eliminar un lote y todas sus etapas */
+  async eliminarLote(loteId: string, usuarioId: string) {
+    const lote = await this.prisma.lote.findFirst({
+      where: { id: loteId, predio: { usuarioId } },
+    });
+    if (!lote) throw new Error('Lote no encontrado');
+    await this.prisma.eventoClimatico.deleteMany({ where: { loteId } });
+    await this.prisma.etapaLote.deleteMany({ where: { loteId } });
+    return this.prisma.lote.delete({ where: { id: loteId } });
+  }
+
+  /** Confirmar etapa con notas opcionales */
+  async confirmarEtapaConNotas(loteId: string, etapaCodigo: string, fechaReal: Date, notas?: string) {
+    const resultado = await this.confirmarEtapa(loteId, etapaCodigo, fechaReal);
+    if (notas) {
+      await this.prisma.etapaLote.updateMany({
+        where: { loteId, etapaCodigo },
+        data: { notas },
+      });
+    }
+    return resultado;
+  }
+
+  /** Listar predios del usuario */
+  async listarPredios(usuarioId: string) {
+    return this.prisma.predio.findMany({
+      where: { usuarioId },
+      include: {
+        lotes: {
+          where: { activo: true },
+          include: { etapas: true, ficha: true },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
 }

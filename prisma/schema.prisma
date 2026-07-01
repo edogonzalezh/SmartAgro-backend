@@ -38,8 +38,11 @@ model Lote {
   predio      Predio   @relation(fields: [predioId], references: [id])
   fichaId     String
   ficha       FichaCultivo @relation(fields: [fichaId], references: [id])
-  fechaInicio DateTime // fecha de siembra de almácigo, el "ancla" inicial
+  fechaInicio DateTime
+  notas       String?
+  activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   etapas          EtapaLote[]
   eventosClimaticos EventoClimatico[]
@@ -88,6 +91,7 @@ model EtapaLote {
   fechaPlanificada DateTime
   fechaReal        DateTime?
   confirmadaEn     DateTime?
+  notas            String?
 }
 
 model EventoClimatico {
