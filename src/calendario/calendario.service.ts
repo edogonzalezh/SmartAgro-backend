@@ -119,8 +119,9 @@ export class CalendarioService {
   }
 
   /** Lista todos los lotes con sus etapas, para alimentar las pantallas de "hoy" y calendario. */
-  async listarLotes() {
+  async listarLotes(usuarioId: string) {
     const lotes = await this.prisma.lote.findMany({
+      where: { predio: { usuarioId } },
       include: {
         etapas: true,
         ficha: { include: { tareas: true } },

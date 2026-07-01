@@ -1,31 +1,21 @@
-// calendario.controller.ts
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+// calendario/calendario.controller.ts
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CalendarioService } from './calendario.service';
+import { UsuarioActual } from '../auth/usuario-actual.decorator';
 
-class CrearLoteDto {
-  nombre: string;
-  predioId: string;
-  fichaId: string; // ej: "tomate_talca"
-  fechaInicio: string; // ISO date string
-}
-
-class ConfirmarEtapaDto {
-  etapaCodigo: string; // ej: "trasplante"
-  fechaReal: string; // ISO date string
-}
-
-class EventoClimaticoDto {
-  tipo: 'helada' | 'ola_calor';
-  fecha: string; // ISO date string
-}
+class CrearLoteDto    { nombre: string; predioId: string; fichaId: string; fechaInicio: string; }
+class ConfirmarDto    { etapaCodigo: string; fechaReal: string; }
+class EventoClimaDto  { tipo: 'helada' | 'ola_calor'; fecha: string; }
 
 @Controller('lotes')
+@UseGuards(AuthGuard('jwt'))
 export class CalendarioController {
   constructor(private calendarioService: CalendarioService) {}
 
   @Get()
-  listarLotes() {
-    return this.calendarioService.listarLotes();
+  listarLotes(@UsuarioActual() user: { id: string }) {
+    return this.calendarioService.listarLotes(user.id);
   }
 
   @Post()
@@ -39,20 +29,15 @@ export class CalendarioController {
   }
 
   @Post(':loteId/confirmar-etapa')
-  confirmarEtapa(@Param('loteId') loteId: string, @Body() dto: ConfirmarEtapaDto) {
-    return this.calendarioService.confirmarEtapa(
-      loteId,
-      dto.etapaCodigo,
-      new Date(dto.fechaReal),
-    );
+  confirmarEtapa(
+    @Param('loteId') loteId: string,
+    @Body() dto: ConfirmarDto,
+  ) {
+    return this.calendarioService.confirmarEtapa(loteId, dto.etapaCodigo, new Date(dto.fechaReal));
   }
 
   @Post(':loteId/eventos-climaticos')
-  registrarEvento(@Param('loteId') loteId: string, @Body() dto: EventoClimaticoDto) {
-    return this.calendarioService.registrarEventoClimatico(
-      loteId,
-      dto.tipo,
-      new Date(dto.fecha),
-    );
+  registrarEvento(@Param('loteId') loteId: string, @Body() dto: EventoClimaDto) {
+    return this.calendarioService.registrarEventoClimatico(loteId, dto.tipo, new Date(dto.fecha));
   }
 }
