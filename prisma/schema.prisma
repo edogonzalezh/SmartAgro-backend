@@ -42,7 +42,6 @@ model Lote {
   notas       String?
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
   etapas          EtapaLote[]
   eventosClimaticos EventoClimatico[]
