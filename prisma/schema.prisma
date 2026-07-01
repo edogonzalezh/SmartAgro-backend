@@ -45,6 +45,8 @@ model Lote {
 
   etapas          EtapaLote[]
   eventosClimaticos EventoClimatico[]
+  gastos          GastoLote[]
+  ingresos        IngresoLote[]
 }
 
 // Ficha técnica de referencia (tomate_talca, lechuga_talca, etc.)
@@ -103,4 +105,33 @@ model EventoClimatico {
   ajusteSugeridoDias Int?
   ajusteAplicado     Boolean @default(false)
   createdAt   DateTime @default(now())
+}
+
+// ── FASE 3: Gestión económica ────────────────────────────────────────────────
+
+model GastoLote {
+  id          String   @id @default(uuid())
+  loteId      String
+  lote        Lote     @relation(fields: [loteId], references: [id])
+  categoria   String   // "insumo" | "mano_obra" | "maquinaria" | "otro"
+  descripcion String
+  cantidad    Float?
+  unidad      String?  // kg, litros, horas, etc.
+  monto       Float
+  fecha       DateTime
+  createdAt   DateTime @default(now())
+}
+
+model IngresoLote {
+  id            String   @id @default(uuid())
+  loteId        String
+  lote          Lote     @relation(fields: [loteId], references: [id])
+  descripcion   String
+  cantidad      Float?
+  unidad        String?  // kg, cajas, unidades
+  precioUnitario Float?
+  monto         Float
+  fecha         DateTime
+  comprador     String?
+  createdAt     DateTime @default(now())
 }
