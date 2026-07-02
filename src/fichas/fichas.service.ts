@@ -60,6 +60,11 @@ export class FichasService {
     etapaCodigo: string; nombre: string;
     orden: number; duracionDesdeAnterior: number;
   }) {
+    // Desplazar hacia abajo todas las etapas con orden >= al orden indicado
+    await this.prisma.etapaFicha.updateMany({
+      where: { fichaId, orden: { gte: data.orden } },
+      data: { orden: { increment: 1 } },
+    });
     return this.prisma.etapaFicha.create({ data: { fichaId, ...data } });
   }
 
