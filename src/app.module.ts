@@ -7,12 +7,13 @@ import { AuthModule } from './auth/auth.module';
 import { FichasModule } from './fichas/fichas.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { EconomicoModule } from './economico/economico.module';
+import { AsistenteModule } from './asistente/asistente.module';
 
 @Module({
   imports: [
     PrismaModule, AuthModule, CalendarioModule,
     UsuariosModule, PrediosModule, FichasModule,
-    NotificacionesModule, EconomicoModule,
+    NotificacionesModule, EconomicoModule, AsistenteModule,
   ],
 })
 export class AppModule {}
