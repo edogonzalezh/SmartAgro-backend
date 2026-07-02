@@ -55,4 +55,32 @@ export class FichasService {
     await this.prisma.etapaFicha.deleteMany({ where: { fichaId: id } });
     return this.prisma.fichaCultivo.delete({ where: { id } });
   }
+
+  async agregarEtapa(fichaId: string, data: {
+    etapaCodigo: string; nombre: string;
+    orden: number; duracionDesdeAnterior: number;
+  }) {
+    return this.prisma.etapaFicha.create({ data: { fichaId, ...data } });
+  }
+
+  async eliminarEtapa(etapaId: string) {
+    return this.prisma.etapaFicha.delete({ where: { id: etapaId } });
+  }
+
+  async agregarTarea(fichaId: string, data: {
+    nombre: string; etapaAncla: string; offsetDias: number;
+  }) {
+    return this.prisma.tareaFicha.create({ data: { fichaId, ...data } });
+  }
+
+  async eliminarTarea(tareaId: string) {
+    return this.prisma.tareaFicha.delete({ where: { id: tareaId } });
+  }
+
+  async reordenarEtapa(etapaId: string, nuevoOrden: number) {
+    return this.prisma.etapaFicha.update({
+      where: { id: etapaId },
+      data: { orden: nuevoOrden },
+    });
+  }
 }

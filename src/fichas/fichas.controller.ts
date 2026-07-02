@@ -17,16 +17,43 @@ export class FichasController {
   @Post()
   crear(@Body() body: any) { return this.fichasService.crear(body); }
 
+  @Delete(':id')
+  eliminar(@Param('id') id: string) { return this.fichasService.eliminar(id); }
+
+  // ── Etapas ──────────────────────────────────────────────────────
   @Patch('etapas/:etapaId')
   actualizarEtapa(@Param('etapaId') id: string, @Body() body: { duracionDesdeAnterior: number }) {
     return this.fichasService.actualizarEtapa(id, body.duracionDesdeAnterior);
   }
 
+  @Post(':fichaId/etapas')
+  agregarEtapa(@Param('fichaId') fichaId: string, @Body() body: any) {
+    return this.fichasService.agregarEtapa(fichaId, body);
+  }
+
+  @Delete('etapas/:etapaId')
+  eliminarEtapa(@Param('etapaId') id: string) {
+    return this.fichasService.eliminarEtapa(id);
+  }
+
+  @Patch('etapas/:etapaId/orden')
+  reordenarEtapa(@Param('etapaId') id: string, @Body() body: { orden: number }) {
+    return this.fichasService.reordenarEtapa(id, body.orden);
+  }
+
+  // ── Tareas ──────────────────────────────────────────────────────
   @Patch('tareas/:tareaId')
   actualizarTarea(@Param('tareaId') id: string, @Body() body: { offsetDias: number }) {
     return this.fichasService.actualizarTarea(id, body.offsetDias);
   }
 
-  @Delete(':id')
-  eliminar(@Param('id') id: string) { return this.fichasService.eliminar(id); }
+  @Post(':fichaId/tareas')
+  agregarTarea(@Param('fichaId') fichaId: string, @Body() body: any) {
+    return this.fichasService.agregarTarea(fichaId, body);
+  }
+
+  @Delete('tareas/:tareaId')
+  eliminarTarea(@Param('tareaId') id: string) {
+    return this.fichasService.eliminarTarea(id);
+  }
 }
